@@ -37,6 +37,7 @@ from ..utils import BBOX
 from ..proj.reproj import reprojPt, reprojBbox, reprojImg
 from ..proj.ellps import dd2meters, meters2dd
 from ..proj.srs import SRS
+from ...operators.utils.requests_proxy import urlopen
 
 from .. import settings
 USER_AGENT = settings.user_agent
@@ -582,7 +583,7 @@ class MapService():
 		try:
 			#make request
 			req = urllib.request.Request(url, None, self.headers)
-			handle = urllib.request.urlopen(req, timeout=TIMEOUT)
+			handle = urlopen(req, timeout=TIMEOUT)
 			#open image stream
 			data = handle.read()
 			handle.close()

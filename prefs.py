@@ -271,6 +271,19 @@ class BGIS_PREFS(AddonPreferences):
 		update = updateLogLevel,
 		default = 'DEBUG'
 		)
+	
+	socksProxyStrategy: EnumProperty(
+		name = "Strategy",
+		description = "Choose socks proxy strategy",
+		items = [ ('N', 'None', ''), ('S', 'Follow System', ''), ('M', 'MANUAL', '') ]
+		)
+	socksProxy: StringProperty(
+		name = "Host",
+		description = "proxy sever host")
+	socksPort: StringProperty(
+		name = "Port",
+		description = "proxy sever port"
+	)
 
 	################
 	def draw(self, context):
@@ -332,13 +345,24 @@ class BGIS_PREFS(AddonPreferences):
 
 		row = box.row()
 		row.label(text="Opentopography Api Key")
-		box.row().prop(self, "opentopography_api_key")
+		row.prop(self, "opentopography_api_key")
+		
 		#System
 		box = layout.box()
 		box.label(text='System')
 		box.prop(self, "projEngine")
 		box.prop(self, "imgEngine")
 		box.prop(self, "logLevel")
+
+		#Socks Proxy
+		box = layout.box()
+		box.label(text='Socks proxy')
+		box.row().prop(self, "socksProxyStrategy")
+
+		if self.socksProxyStrategy == "M":
+			box.row().prop(self, "socksProxy")
+			box.row().prop(self, "socksPort")
+		
 
 #######################
 

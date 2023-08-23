@@ -8,7 +8,11 @@ import socket
 import os
 import sys
 import subprocess
+import bpy
 from pathlib import Path
+from ...prefs import BGIS_PREFS
+
+PKG, SUBPKG = __package__.split('.', maxsplit=1)
 
 import logging
 log = logging.getLogger(__name__)
@@ -24,13 +28,8 @@ except ImportError:
     whl_path = os.path.join(source_dir, 'PySocks-1.7.1-py3-none-any.whl')
     subprocess.run([python_exe, "-m", "pip", "install", whl_path])
 
-SOCKS_PROXY = "127.0.0.1"
-SOCKS_PORT = 8119
 
 class Response:
-    def read(self):
-        return self.r.data
-        pass
     
     r = None
 
@@ -46,21 +45,58 @@ class Response:
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         pass
+
+    def read(self):
+        return self.r.data
+        pass
+
+    def close(self):
+        pass
+
+def getSocksProxy():
+    output = subprocess.getoutput("scutil --proxy")
+    socksEnable = False
+    socksProxy = None
+    socksPort = None
+    for line in output.splitlines():
+        found = line.find('SOCKSEnable')
+        if found > 0:
+            socksEnable = bool(line.split(':')[1].strip())
+            continue
+        found = line.find('SOCKSProxy')
+        if found > 0:
+            socksProxy = line.split(':')[1].strip()
+            continue
+        found = line.find('SOCKSPort')
+        if found > 0:
+            socksPort = int(line.split(':')[1].strip())
+            continue
+    if socksEnable:
+        return (socksProxy, socksPort)
+    return (None, None)
+
     
 def urlopen(url, data=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
-    socksProxy = SOCKS_PROXY
-    socksPort = SOCKS_PORT
+    prefs = bpy.context.preferences.addons[PKG].preferences
+    socksProxy = None
+    socksPort = None
+    if prefs.socksProxyStrategy == 'M':
+        socksProxy = prefs.socksProxy
+        socksPort = int(prefs.socksPort)
+    elif prefs.socksProxyStrategy == 'S':
+        (socksProxy, socksPort) = getSocksProxy()
+    
+    # log.debug("Proxy: {} {} {}".format(prefs.socksProxyStrategy, socksProxy, socksPort))
+    
     if not socksProxy or not socksPort:
         return urllib.request.urlopen(url, data, timeout)
-    
+
     headers = None
     if isinstance(url, urllib.request.Request):
         request = url
         data = data or request.data
         url = request.full_url
         headers = request.headers
-
-    log.debug("Proxy: {} {}".format(socksProxy, socksPort))
 
     
     proxy = SOCKSProxyManager('socks5h://{}:{}/'.format(socksProxy, socksPort), cert_reqs=ssl.CERT_NONE)

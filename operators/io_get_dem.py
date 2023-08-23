@@ -4,7 +4,8 @@ import time
 import logging
 log = logging.getLogger(__name__)
 
-from urllib.request import Request, urlopen
+from urllib.request import Request
+from .utils.requests_proxy import urlopen
 from urllib.error import URLError, HTTPError
 
 import bpy

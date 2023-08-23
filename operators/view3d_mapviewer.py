@@ -632,8 +632,8 @@ class VIEW3D_OT_map_viewer(Operator):
 			self.progress = self.map.srv.report
 			return {'PASS_THROUGH'}
 
-
-		if event.type in ['WHEELUPMOUSE', 'NUMPAD_PLUS']:
+		
+		if event.type in ['WHEELUPMOUSE', 'WHEELOUTMOUSE'] or event.ascii == '+':
 
 			if event.value == 'PRESS':
 
@@ -682,7 +682,7 @@ class VIEW3D_OT_map_viewer(Operator):
 						self.map.get()
 
 
-		if event.type in ['WHEELDOWNMOUSE', 'NUMPAD_MINUS']:
+		if event.type in ['WHEELDOWNMOUSE', 'WHEELINMOUSE'] or event.ascii == '-':
 
 			if event.value == 'PRESS':
 

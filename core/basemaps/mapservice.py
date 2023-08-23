@@ -675,12 +675,15 @@ class MapService():
 		def downloading(laykey, tilesQueue, tilesData, toDstGrid):
 			'''Worker that process the queue and seed tilesData array [(x,y,z,data)]'''
 			#infinite loop that processes items into the queue
-			while not tilesQueue.empty(): #empty is True if all item was get but it not tell if all task was done
+			while True: #empty is True if all item was get but it not tell if all task was done
 				#cancel thread if requested
 				if not self.running:
 					break
 				#Get a job into the queue
-				col, row, zoom = tilesQueue.get() #get() pop the item from queue
+				try:
+					col, row, zoom = tilesQueue.get(block=False) #get() pop the item from queue
+				except: # Empty
+					break
 				#do the job
 				data = self.tileRequest(laykey, col, row, zoom, toDstGrid)
 				if data is not None:

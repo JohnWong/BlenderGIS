@@ -632,105 +632,113 @@ class VIEW3D_OT_map_viewer(Operator):
 			self.progress = self.map.srv.report
 			return {'PASS_THROUGH'}
 
+		op = None
 		
-		if event.type in ['WHEELUPMOUSE', 'WHEELOUTMOUSE'] or event.ascii == '+':
-
+		if event.type in ['WHEELUPMOUSE'] or event.ascii == '+':
 			if event.value == 'PRESS':
-
-				if event.alt:
-					# map scale up
-					self.map.scale *= 10
-					self.map.place()
-					#Scale existing objects
-					for obj in scn.objects:
-						obj.location /= 10
-						obj.scale /= 10
-
-				elif event.ctrl:
-					# view3d zoom up
-					dst = context.region_data.view_distance
-					context.region_data.view_distance -= dst * self.moveFactor
-					if self.prefs.zoomToMouse:
-						mouseLoc = mouseTo3d(context, event.mouse_region_x, event.mouse_region_y)
-						viewLoc = context.region_data.view_location
-						deltaVect = (mouseLoc - viewLoc) * self.moveFactor
-						viewLoc += deltaVect
-				else:
-					# map zoom up
-					if self.map.zoom < self.map.layer.zmax and self.map.zoom < self.map.tm.nbLevels-1:
-						self.map.zoom += 1
-						if self.map.lockedZoom is None:
-							resFactor = self.map.tm.getNextResFac(self.map.zoom)
-							if not self.prefs.zoomToMouse:
-								context.region_data.view_distance *= resFactor
-							else:
-								#Progressibly zoom to cursor
-								dst = context.region_data.view_distance
-								dst2 = dst * resFactor
-								context.region_data.view_distance = dst2
-								mouseLoc = mouseTo3d(context, event.mouse_region_x, event.mouse_region_y)
-								viewLoc = context.region_data.view_location
-								moveFactor = (dst - dst2) / dst
-								deltaVect = (mouseLoc - viewLoc) * moveFactor
-								if self.prefs.lockOrigin:
-									viewLoc += deltaVect
-								else:
-									dx, dy, dz = deltaVect
-									if not self.prefs.lockObj and self.map.bkg is not None:
-										self.map.bkg.location  -= deltaVect
-									self.map.moveOrigin(dx, dy, updObjLoc=self.updObjLoc)
-						self.map.get()
-
-
-		if event.type in ['WHEELDOWNMOUSE', 'WHEELINMOUSE'] or event.ascii == '-':
-
+				op = 'zoomIn'
+		elif event.type in ['WHEELDOWNMOUSE'] or event.ascii == '-':
 			if event.value == 'PRESS':
+				op = 'zoomOut'
+		elif event.type in ['TRACKPADZOOM']:
+			if event.mouse_prev_x > event.mouse_x:
+				op = 'zoomIn'
+			elif event.mouse_prev_x < event.mouse_x:
+				op = 'zoomOut'
+		
+		if op == 'zoomIn':
+			log.debug("ZOOMTEST: in")
+			if event.alt:
+				# map scale up
+				self.map.scale *= 10
+				self.map.place()
+				#Scale existing objects
+				for obj in scn.objects:
+					obj.location /= 10
+					obj.scale /= 10
 
-				if event.alt:
-					#map scale down
-					s = self.map.scale / 10
-					if s < 1: s = 1
-					self.map.scale = s
-					self.map.place()
-					#Scale existing objects
-					for obj in scn.objects:
-						obj.location *= 10
-						obj.scale *= 10
-
-				elif event.ctrl:
-					#view3d zoom down
-					dst = context.region_data.view_distance
-					context.region_data.view_distance += dst * self.moveFactor
-					if self.prefs.zoomToMouse:
-						mouseLoc = mouseTo3d(context, event.mouse_region_x, event.mouse_region_y)
-						viewLoc = context.region_data.view_location
-						deltaVect = (mouseLoc - viewLoc) * self.moveFactor
-						viewLoc -= deltaVect
-				else:
-					#map zoom down
-					if self.map.zoom > self.map.layer.zmin and self.map.zoom > 0:
-						self.map.zoom -= 1
-						if self.map.lockedZoom is None:
-							resFactor = self.map.tm.getPrevResFac(self.map.zoom)
-							if not self.prefs.zoomToMouse:
-								context.region_data.view_distance *= resFactor
+			elif event.ctrl:
+				# view3d zoom up
+				dst = context.region_data.view_distance
+				context.region_data.view_distance -= dst * self.moveFactor
+				if self.prefs.zoomToMouse:
+					mouseLoc = mouseTo3d(context, event.mouse_region_x, event.mouse_region_y)
+					viewLoc = context.region_data.view_location
+					deltaVect = (mouseLoc - viewLoc) * self.moveFactor
+					viewLoc += deltaVect
+			else:
+				# map zoom up
+				if self.map.zoom < self.map.layer.zmax and self.map.zoom < self.map.tm.nbLevels-1:
+					self.map.zoom += 1
+					if self.map.lockedZoom is None:
+						resFactor = self.map.tm.getNextResFac(self.map.zoom)
+						if not self.prefs.zoomToMouse:
+							context.region_data.view_distance *= resFactor
+						else:
+							#Progressibly zoom to cursor
+							dst = context.region_data.view_distance
+							dst2 = dst * resFactor
+							context.region_data.view_distance = dst2
+							mouseLoc = mouseTo3d(context, event.mouse_region_x, event.mouse_region_y)
+							viewLoc = context.region_data.view_location
+							moveFactor = (dst - dst2) / dst
+							deltaVect = (mouseLoc - viewLoc) * moveFactor
+							log.debug("ZOOMTEST: {}".format(deltaVect))
+							if self.prefs.lockOrigin:
+								viewLoc += deltaVect
 							else:
-								#Progressibly zoom to cursor
-								dst = context.region_data.view_distance
-								dst2 = dst * resFactor
-								context.region_data.view_distance = dst2
-								mouseLoc = mouseTo3d(context, event.mouse_region_x, event.mouse_region_y)
-								viewLoc = context.region_data.view_location
-								moveFactor = (dst - dst2) / dst
-								deltaVect = (mouseLoc - viewLoc) * moveFactor
-								if self.prefs.lockOrigin:
-									viewLoc += deltaVect
-								else:
-									dx, dy, dz = deltaVect
-									if not self.prefs.lockObj and self.map.bkg is not None:
-										self.map.bkg.location  -= deltaVect
-									self.map.moveOrigin(dx, dy, updObjLoc=self.updObjLoc)
-						self.map.get()
+								dx, dy, dz = deltaVect
+								if not self.prefs.lockObj and self.map.bkg is not None:
+									self.map.bkg.location  -= deltaVect
+								self.map.moveOrigin(dx, dy, updObjLoc=self.updObjLoc)
+					self.map.get()
+
+		elif op == 'zoomOut':
+			if event.alt:
+				#map scale down
+				s = self.map.scale / 10
+				if s < 1: s = 1
+				self.map.scale = s
+				self.map.place()
+				#Scale existing objects
+				for obj in scn.objects:
+					obj.location *= 10
+					obj.scale *= 10
+
+			elif event.ctrl:
+				#view3d zoom down
+				dst = context.region_data.view_distance
+				context.region_data.view_distance += dst * self.moveFactor
+				if self.prefs.zoomToMouse:
+					mouseLoc = mouseTo3d(context, event.mouse_region_x, event.mouse_region_y)
+					viewLoc = context.region_data.view_location
+					deltaVect = (mouseLoc - viewLoc) * self.moveFactor
+					viewLoc -= deltaVect
+			else:
+				#map zoom down
+				if self.map.zoom > self.map.layer.zmin and self.map.zoom > 0:
+					self.map.zoom -= 1
+					if self.map.lockedZoom is None:
+						resFactor = self.map.tm.getPrevResFac(self.map.zoom)
+						if not self.prefs.zoomToMouse:
+							context.region_data.view_distance *= resFactor
+						else:
+							#Progressibly zoom to cursor
+							dst = context.region_data.view_distance
+							dst2 = dst * resFactor
+							context.region_data.view_distance = dst2
+							mouseLoc = mouseTo3d(context, event.mouse_region_x, event.mouse_region_y)
+							viewLoc = context.region_data.view_location
+							moveFactor = (dst - dst2) / dst
+							deltaVect = (mouseLoc - viewLoc) * moveFactor
+							if self.prefs.lockOrigin:
+								viewLoc += deltaVect
+							else:
+								dx, dy, dz = deltaVect
+								if not self.prefs.lockObj and self.map.bkg is not None:
+									self.map.bkg.location  -= deltaVect
+								self.map.moveOrigin(dx, dy, updObjLoc=self.updObjLoc)
+					self.map.get()
 
 
 

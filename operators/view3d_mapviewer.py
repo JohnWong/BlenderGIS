@@ -103,7 +103,7 @@ class BaseMap(GeoScene):
 		if not self.hasScale:
 			self.scale = 1
 		if not self.hasZoom:
-			self.zoom = 0
+			self.zoom = 3
 
 		self.lockedZoom = None
 
@@ -647,7 +647,6 @@ class VIEW3D_OT_map_viewer(Operator):
 				op = 'zoomOut'
 		
 		if op == 'zoomIn':
-			log.debug("ZOOMTEST: in")
 			if event.alt:
 				# map scale up
 				self.map.scale *= 10
@@ -683,7 +682,6 @@ class VIEW3D_OT_map_viewer(Operator):
 							viewLoc = context.region_data.view_location
 							moveFactor = (dst - dst2) / dst
 							deltaVect = (mouseLoc - viewLoc) * moveFactor
-							log.debug("ZOOMTEST: {}".format(deltaVect))
 							if self.prefs.lockOrigin:
 								viewLoc += deltaVect
 							else:

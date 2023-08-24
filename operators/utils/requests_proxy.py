@@ -111,8 +111,3 @@ def urlopen(url, data=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
         raise urllib.request.HTTPError(url, r.status, r.reason, r.headers)
     
     return Response(r)
-
-if __name__ == "__main__":
-    url = "https://portal.opentopography.org/API/globaldem?demtype=SRTMGL1&west=119.02387890253334&east=119.24760547004699&south=30.181121842857074&north=30.2990178820855&outputFormat=GTiff&API_Key=a6fa47ae0f45eb354c81a95ac07a0325"
-    rq = urllib.request.Request(url, headers={'User-Agent': "darwin"})
-    print(urlopen(rq, timeout=120).read())
